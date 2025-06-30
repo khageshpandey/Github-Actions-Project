@@ -24,7 +24,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: build-artifact
-        path: target/your-artifact.jar
+        path: target/*.jar
 
 
   security-check:
@@ -68,13 +68,17 @@ jobs:
     needs: test
     steps:
     - name: Download build artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/download-artifact@v4
       with:
         name: build-artifact
         path: target/
-    - name: upload artifact to S3
+
+    - name: List files in target after download
+      run: ls -l target/
+
+    - name: Upload artifact to S3
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: us-east-1
-      run: aws s3 cp target/your-artifact.jar s3://githubs3project/path/your-artifact.jar
+      run: aws s3 cp target/bankapp-0.0.1-SNAPSHOT.jar s3://githubs3project/path/

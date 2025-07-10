@@ -84,24 +84,57 @@ jobs:
         aws s3 cp target/*.war s3://githubs3project/path/ --region $AWS_REGION
 
   deploy_to_beanstalk:
-      runs-on: ubuntu-latest
-      needs: deploy_to_s3
-      steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifact
-          path: target/
+   runs-on: ubuntu-latest
+   needs: deploy_to_s3
+   steps:
+   - name: Download build artifact
+     uses: actions/download-artifact@v4
+     with:
+       name: build-artifact
+       path: target/
 
-      - name: List files in target after download
-        run: ls -l target/
-      - name: Deploy to Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v21
-        with:
-            aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            application_name: gitcicd-sample
-            environment_name: gitcicd-sample-icw
-            version_label: icasework-v10.000.1
-            region: eu-central-1
-            deployment_package: target/*.war
+   - name: List files in target directory after download
+     run: ls -l target/
+
+   - name: Set up AWS credentials
+     uses: aws-actions/configure-aws-credentials@v1
+     with:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws-region: eu-central-1  # Update with your AWS region
+
+   - name: Verify WAR file existence in target directory
+     run: |
+      echo "Checking for .war file in target directory..."
+      ls -l target/*.war
+      # Optionally: Check if the file exists
+      if [ ! -f target/*.war ]; then
+        echo "Error: WAR file not found!"
+        exit 1
+      fi
+
+   - name: Package the WAR for Elastic Beanstalk
+     run: |
+      echo "Packaging the WAR file for Elastic Beanstalk deployment..."
+      zip -r my-app.zip target/*.war
+      ls -l my-app.zip
+
+   - name: Create application version in Elastic Beanstalk
+     run: |
+      echo "Creating Elastic Beanstalk application version..."
+      aws elasticbeanstalk create-application-version \
+        --application-name gitcicd-sample \
+        --version-label $GITHUB_SHA \
+        --source-bundle S3Bucket=githubs3project,S3Key=my-app.zip \
+        --region eu-central-1
+      echo "Elastic Beanstalk application version created."
+
+   - name: Deploy to Elastic Beanstalk
+     run: |
+      echo "Deploying to Elastic Beanstalk..."
+      aws elasticbeanstalk update-environment \
+        --application-name gitcicd-sample \
+        --environment-name gitcicd-sample-icw \
+        --version-label $GITHUB_SHA \
+        --region eu-central-1
+      echo "Elastic Beanstalk deployment initiated."

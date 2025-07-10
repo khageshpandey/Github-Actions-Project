@@ -104,17 +104,17 @@ jobs:
        aws-region: eu-central-1  # Update with your AWS region
 
     - name: Verify WAR file existence in target directory
-      run: |
-       echo "Checking for .war file in target directory..."
-        ls -l target/*.war
-      # Optionally: Check if the file exists
-        if [ ! -f target/*.war ]; then
-         echo "Error: WAR file not found!"
-         exit 1
-        fi
-
-  - name: Package the WAR into a ZIP file for Elastic Beanstalk
     run: |
+      echo "Checking for .war file in target directory..."
+      ls -l target/*.war
+      # Optionally: Check if the file exists
+      if [ ! -f target/*.war ]; then
+        echo "Error: WAR file not found!"
+        exit 1
+      fi
+      
+   - name: Package the WAR into a ZIP file for Elastic Beanstalk
+     run: |
       echo "Packaging the WAR file into a ZIP file..."
       zip -r my-app.zip target/*.war
       ls -l my-app.zip

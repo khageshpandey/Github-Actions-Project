@@ -130,7 +130,7 @@ jobs:
         echo "Creating Elastic Beanstalk application version..."
         aws elasticbeanstalk create-application-version \
           --application-name gitcicd-sample \
-          --version-label $GITHUB_SHA \
+          --version-label icaseworkv1.0.1 \
           --source-bundle S3Bucket=githubs3project,S3Key=my-app.zip \
           --region eu-central-1
         echo "Elastic Beanstalk application version created."
@@ -141,6 +141,6 @@ jobs:
         aws elasticbeanstalk update-environment \
           --application-name gitcicd-sample \
           --environment-name gitcicd-sample-icw \
-          --version-label $GITHUB_SHA \
+          --version-label icaseworkv1.0.1 \
           --region eu-central-1
         echo "Elastic Beanstalk deployment initiated."
